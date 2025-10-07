@@ -77,8 +77,6 @@ public class Duck {
     	
     }
     
-    
-    
     // Draws the duck on the screen
     public void paint(Graphics g) {
         Graphics2D g2 = (Graphics2D) g;   // Graphics2D lets us draw images

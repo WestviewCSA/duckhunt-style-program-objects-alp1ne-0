@@ -1,13 +1,17 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.net.URL;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -16,9 +20,11 @@ import javax.swing.Timer;
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
 	
 	//frame size
-	private int screenWidth = 900, screenHeight = 600;
+	private int screenWidth = 1280, screenHeight = 960;
 	private String title = "Duck Hunt";
-	
+
+	private Image bgImage;	
+	private Image fgImage;
 	
 	/**
 	 * Declare and instantiate (create) your objects here
@@ -30,13 +36,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		//this line of code is to force redraw the entire frame
 		super.paintComponent(pen);
 		
-		//call paint for the object
-		//for objects, you call methods on them using the dot operator
-		//methods use always involve parenthesis
+		pen.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
 		duckObject.paint(pen);
-		
-		
-		
+		pen.drawImage(fgImage, 0, 0, screenWidth, screenHeight, null);
 	}
 	
 	
@@ -71,7 +73,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 
-
 	/*
 	 * This method runs automatically when a key is pressed down
 	 */
@@ -89,16 +90,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		
 	}
 
-	/**
+	/*
 	 * Runs when a keyboard key is pressed then released
 	 */
 	public void keyTyped(KeyEvent key) {
-		
-		
+				
 	}
-	
-	
-	/**
+		
+	/*
 	 * The Timer animation calls this method below which calls for a repaint of the JFrame.
 	 * Allows for our animation since any changes to states/variables will be reflected
 	 * on the screen if those variables are being used for any drawing on the screen.
@@ -116,6 +115,17 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		new Frame();
 	}
 	
+    
+    private Image getImage(String path) {
+        Image tempImage = null;
+        try {
+            URL imageURL = Duck.class.getResource(path);
+            tempImage = Toolkit.getDefaultToolkit().getImage(imageURL);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return tempImage;
+    }
 	
 	
 	public Frame() {
@@ -131,6 +141,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		t.start();
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
+		this.bgImage = getImage("imgs/bg.png");
+		this.fgImage = getImage("imgs/fg.png");
 	}
 
 }
