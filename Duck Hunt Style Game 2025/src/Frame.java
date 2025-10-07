@@ -20,7 +20,7 @@ import javax.swing.Timer;
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
 	
 	//frame size
-	private int screenWidth = 1280, screenHeight = 960;
+	private int screenWidth = 640 * 2, screenHeight = 480 * 2 + 32;
 	private String title = "Duck Hunt";
 
 	private Image bgImage;	
@@ -36,9 +36,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		//this line of code is to force redraw the entire frame
 		super.paintComponent(pen);
 		
-		pen.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
+		pen.drawImage(bgImage, 0, 0, screenWidth, screenHeight - 32, null);
 		duckObject.paint(pen);
-		pen.drawImage(fgImage, 0, 0, screenWidth, screenHeight, null);
+		pen.drawImage(fgImage, 0, 0, screenWidth, screenHeight - 32, null);
 	}
 	
 	
