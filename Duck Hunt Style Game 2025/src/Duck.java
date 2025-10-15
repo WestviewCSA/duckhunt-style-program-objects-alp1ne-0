@@ -12,20 +12,25 @@ public class Duck {
     private AffineTransform tx;      // Used to move (translate) and resize (scale) the image
 
     // Variables to control the size (scale) of the duck image
-    private double scaleX;           
-    private double scaleY;           
+    public double scaleX;           
+    public double scaleY;           
 
     // Variables to control the location (x and y position) of the duck
-    private double x;                
-    private double y;        
+    public double x;                
+    public double y;        
     
     //variables for speed
-    private int vx;
-    private int vy;
+    public int vx;
+    public int vy;
+
+    public int width;
+    public int height;
 
     // Constructor: runs when you make a new Duck object
     public Duck() {
         img = getImage("/imgs/duck.gif"); // Load the image file
+        width = 250;
+        height = 250;
         
         tx = AffineTransform.getTranslateInstance(0, 0); // Start with image at (0,0)
         
@@ -65,16 +70,24 @@ public class Duck {
     	this.vy = vy;
     }
     
-    
     // Changes the picture to a new image file
     public void changePicture(String imageFileName) {
         img = getImage("/imgs/"+imageFileName);
         init(x, y); // keep same location when changing image
     }
+
+    public void reset() {
+		x = -width;
+		y = (Math.random() * (350 * 2 - height));    	
+    }
     
     //update any variables for the object such as x, y, vx, vy
     public void update() {
-    	
+    	x += vx;
+    	y += vy;
+    	if (x >= 640 * 2 + width) {
+    		reset();
+    	}
     }
     
     // Draws the duck on the screen

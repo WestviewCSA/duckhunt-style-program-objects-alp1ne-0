@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -23,25 +24,36 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int screenWidth = 640 * 2, screenHeight = 480 * 2 + 32;
 	private String title = "Duck Hunt";
 
-	private Image bgImage;	
+	private Image bgImage;
 	private Image fgImage;
+
+	int misses = 0;
+	int totalShots = 0;
+	int duckCount = 0;
 	
 	/**
 	 * Declare and instantiate (create) your objects here
 	 */
-	private Duck duckObject = new Duck();
+	private Duck duck1 = new Duck(0, 0, 1, 1, 30, 0);
+	private Duck duck2 = new Duck(0, 0, 1, 1, 30, 0);
+	private Duck duck3 = new Duck(0, 0, 1, 1, 30, 0);
 	
-	public void paint(Graphics pen) {
-		
+	public void paint(Graphics g) {
 		//this line of code is to force redraw the entire frame
-		super.paintComponent(pen);
+		super.paintComponent(g);
+	    Font font = new Font("Sans Serif", Font.PLAIN, 24);
+	    g.setFont(font);
 		
-		pen.drawImage(bgImage, 0, 0, screenWidth, screenHeight - 32, null);
-		duckObject.paint(pen);
-		pen.drawImage(fgImage, 0, 0, screenWidth, screenHeight - 32, null);
+		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight - 32, null);
+		g.drawString(Integer.toString(totalShots) + " shots", 10, 34);
+		g.drawString("Accuracy: " + Double.toString((double)(totalShots - misses) / (double)totalShots), 10, 34 + 24 + 10);
+		g.drawString("Avg. ducks per shot: " + Double.toString((double)duckCount / (double)totalShots), 10, 34 + 24 + 10 + 24 + 10);
+		duck1.paint(g);
+		duck2.paint(g);
+		duck3.paint(g);
+		g.drawImage(fgImage, 0, 0, screenWidth, screenHeight - 32, null);
 	}
-	
-	
+		
 	@Override
 	public void mouseClicked(MouseEvent mouse) {
 	    // Runs when the mouse is clicked (pressed and released quickly).
@@ -64,6 +76,31 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	public void mousePressed(MouseEvent mouse) {
 	    // Runs when a mouse button is pressed down.
 	    // Example: You could start dragging an object here.
+		int mx = mouse.getX();
+		int my = mouse.getY();
+		boolean duckHit = false;
+		if (mx > duck1.x && mx <= duck1.x + duck1.width
+		 && my > duck1.y && my <= duck1.y + duck1.height) {
+			duck1.reset();
+			duckHit = true;
+			duckCount++;
+		}
+		if (mx > duck2.x && mx <= duck2.x + duck2.width
+		 && my > duck2.y && my <= duck2.y + duck2.height) {
+			duck2.reset();
+			duckHit = true;
+			duckCount++;
+		}
+		if (mx > duck3.x && mx <= duck3.x + duck3.width
+		 && my > duck3.y && my <= duck3.y + duck3.height) {
+			duck3.reset();
+			duckHit = true;
+			duckCount++;
+		}
+		if (!duckHit) {
+			misses++;
+		}
+		totalShots++;
 	}
 
 	@Override
@@ -72,30 +109,23 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	    // Example: You could stop dragging the object or drop it in place.
 	}
 
-
 	/*
 	 * This method runs automatically when a key is pressed down
 	 */
-	public void keyPressed(KeyEvent key) {
-		
-		System.out.println("from keyPressed method:"+key.getKeyCode());
-		
+	public void keyPressed(KeyEvent key) {	
+		System.out.println("from keyPressed method:"+key.getKeyCode());		
 	}
 
 	/*
 	 * This method runs when a keyboard key is released from a pressed state
 	 * aka when you stopped pressing it
 	 */
-	public void keyReleased(KeyEvent key) {
-		
-	}
+	public void keyReleased(KeyEvent key) {}
 
 	/*
 	 * Runs when a keyboard key is pressed then released
 	 */
-	public void keyTyped(KeyEvent key) {
-				
-	}
+	public void keyTyped(KeyEvent key) {}
 		
 	/*
 	 * The Timer animation calls this method below which calls for a repaint of the JFrame.
@@ -114,8 +144,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	public static void main(String[] arg) {
 		new Frame();
 	}
-	
-    
+	    
     private Image getImage(String path) {
         Image tempImage = null;
         try {
@@ -126,8 +155,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
         }
         return tempImage;
     }
-	
-	
+		
 	public Frame() {
 		JFrame f = new JFrame(title);
 		f.setSize(new Dimension(screenWidth, screenHeight));
