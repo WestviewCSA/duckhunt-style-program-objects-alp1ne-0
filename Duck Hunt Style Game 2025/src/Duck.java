@@ -4,12 +4,16 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.net.URL;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 // The Duck class represents a picture of a duck that can be drawn on the screen.
 public class Duck {
     // Instance variables (data that belongs to each Duck object)
     private Image img;               // Stores the picture of the duck
     private AffineTransform tx;      // Used to move (translate) and resize (scale) the image
+
+    public boolean active = true;
 
     // Variables to control the size (scale) of the duck image
     public double scaleX;           
@@ -25,9 +29,12 @@ public class Duck {
 
     public int width;
     public int height;
+    
+    Consumer<Integer> escapeCallback;
 
     // Constructor: runs when you make a new Duck object
-    public Duck() {
+    public Duck(Consumer<Integer> escapeCallback) {
+    	this.escapeCallback = escapeCallback;
         img = getImage("/imgs/duck.gif"); // Load the image file
         width = 250;
         height = 250;
@@ -44,8 +51,8 @@ public class Duck {
     }
     
     //2nd constructor to initialize location and scale!
-    public Duck(int x, int y, int scaleX, int scaleY) {
-    	this();
+    public Duck(Consumer<Integer> escapeCallback, int x, int y, int scaleX, int scaleY) {
+    	this(escapeCallback);
     	this.x 		= x;
     	this.y 		= y;
     	this.scaleX = scaleX;
@@ -54,15 +61,10 @@ public class Duck {
     }
     
     //2nd constructor to initialize location and scale!
-    public Duck(int x, int y, int scaleX, int scaleY, int vx, int vy) {
-    	this();
-    	this.x 		= x;
-    	this.y 		= y;
-    	this.scaleX = scaleX;
-    	this.scaleY = scaleY;
+    public Duck(Consumer<Integer> escapeCallback, int x, int y, int scaleX, int scaleY, int vx, int vy) {
+    	this(escapeCallback, x, y, scaleX, scaleY);
     	this.vx 	= vx; 
     	this.vy 	= vy;
-    	init(x,y);
     }
     
     public void setVelocityVariables(int vx, int vy) {
@@ -83,19 +85,22 @@ public class Duck {
     
     //update any variables for the object such as x, y, vx, vy
     public void update() {
-    	x += vx;
-    	y += vy;
-    	if (x >= 640 * 2 + width) {
-    		reset();
-    	}
+		x += vx;
+		y += vy;
+		if (x >= 640 * 2 + width) {
+			reset();
+			if (active) {
+				this.escapeCallback.accept(1);
+			}
+		}
     }
     
     // Draws the duck on the screen
     public void paint(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;   // Graphics2D lets us draw images
-        g2.drawImage(img, tx, null);      // Actually draw the duck image
-        update();
-        init(x,y);
+		Graphics2D g2 = (Graphics2D) g;   // Graphics2D lets us draw images
+		g2.drawImage(img, tx, null);      // Actually draw the duck image
+		update();
+		init(x,y);
     }
     
     // Setup method: places the duck at (a, b) and scales it
