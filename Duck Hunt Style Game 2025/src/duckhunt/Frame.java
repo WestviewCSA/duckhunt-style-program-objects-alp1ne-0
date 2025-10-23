@@ -1,4 +1,5 @@
-import java.awt.Color;
+package duckhunt;
+
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -14,59 +15,44 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.net.URL;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import java.net.URL;
+
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
-	// frame scale
-	private int fscale = 1;
-	private int screenWidth = 640 * fscale;
-	// the +30 is to account for the title bar
-	private int screenHeight = 480 * fscale + 30;
-	// TODO: think of a good title for the game! also figure out what the game's
-	// theme is supposed to be
-	private String title = "Duck Hunt";
+	private double scale = 1.0;
+	private int screenWidth = (int)(640.0 * scale);
+	private int screenHeight = (int)(480.0 * scale) + 30; // +30 is to account for title bar
+	private String title = "Obelisk Defense";
 
 	private Image bgImage;
 	private Image fgImage;
 	private Image cloudImage;
 
+	// we call them ducks but they are actually evil alien obelisks
+	public int duckCount = 3;
+	public Duck ducks[] = new Duck[duckCount];
+
+	// controls if a round is currently going, i.e. not on score display screen
 	public boolean active = false;
 	public int gamesPlayed = 0;
+
+	// frame counter, used to know when to end the current round
+	int frames = 0;
 
 	int misses = 0;
 	int totalShots = 0;
 	int ducksShot = 0;
 	int escapes = 0;
-	int frames = 0;
 	int maxTimer = 30;
 
-	public void incrementEscapeCounter(Integer i) {
-		escapes++;
-	}
-
-	/**
-	 * Declare and instantiate (create) your objects here
-	 */
-	private Duck duck1 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
-	private Duck duck2 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
-	private Duck duck3 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
-
-	public int duckCount = 3;
-
-	public Duck ducks[] = new Duck[duckCount];
-
-	public static void main(String[] arg) {
-		new Frame();
-	}
-
-	private Image getImage(String path) {
+	public static Image getImage(String path) {
 		Image tempImage = null;
 		try {
-			URL imageURL = Duck.class.getResource(path);
+			URL imageURL = Frame.class.getResource(path);
 			tempImage = Toolkit.getDefaultToolkit().getImage(imageURL);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -74,49 +60,72 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		return tempImage;
 	}
 
+	// used as a callback for the ducks
+	public void duckEscapeCallback(Integer i) {
+		if (active) {
+			escapes++;
+		}
+	}
+
+	public static void main(String[] arg) {
+		new Frame();
+	}
+
 	public Frame() {
 		JFrame f = new JFrame(title);
 		f.setSize(new Dimension(screenWidth, screenHeight));
-		f.setBackground(Color.blue);
+
 		f.add(this);
-		f.setResizable(false);
-		f.setLayout(new GridLayout(1, 2));
 		f.addMouseListener(this);
 		f.addKeyListener(this);
-		Timer t = new Timer(16, this);
-		t.start();
+
+		f.setResizable(false);
+		f.setLayout(new GridLayout(1, 2));
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
-		this.bgImage = getImage("imgs/bg.png");
-		this.fgImage = getImage("imgs/fg.png");
-		this.cloudImage = getImage("imgs/cloud.png");
+
+		// sends an event every 16 milliseconds to repaint the screen, approximately 60fps
+		Timer t = new Timer(16, this);
+		t.start();
+
+		Image duckImage = getImage("../imgs/obelisk.png");
+		for (int i = 0; i < duckCount; i++) {
+			ducks[i] = new Duck(duckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
+		}
+		this.bgImage = getImage("../imgs/bg.png");
+		this.fgImage = getImage("../imgs/fg.png");
+		this.cloudImage = getImage("../imgs/clouds.png");
 	}
 
-	@Override
+	// repaint when the timer goes off
 	public void actionPerformed(ActionEvent arg0) {
+		update();
 		repaint();
 	}
 
-	public void paint(Graphics g) {
+	public void update() {
 		if (active) {
 			frames++;
 		}
+		if (frames / 60 == maxTimer) {
+			this.active = false;
+		}
+		for (Duck duck : ducks) {
+			duck.update();
+		}
+	}
+
+	public void paint(Graphics g) {
 		super.paintComponent(g);
-		Font font = new Font("Sans Serif", Font.PLAIN, 12 * fscale);
+		Font font = new Font("Sans Serif", Font.PLAIN, (int)(12.0 * scale));
 		g.setFont(font);
 
 		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
-		if (frames / 60 == maxTimer) {
-			duck1.active = false;
-			duck2.active = false;
-			duck3.active = false;
-			this.active = false;
-		}
 		g.drawImage(cloudImage, 0, 0, screenWidth, screenHeight, null);
 
-		duck1.paint(g);
-		duck2.paint(g);
-		duck3.paint(g);
+		for (Duck duck : ducks) {
+			duck.paint(g);
+		}
 
 		g.drawImage(fgImage, 0, 0, screenWidth, screenHeight, null);
 
@@ -124,14 +133,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (gamesPlayed != 0) {
 			g.drawString(Integer.toString(totalShots) + " shots: " + Integer.toString(misses) + " misses, "
 					+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(ducksShot) + " ducks", 10,
-					12 * fscale * 2);
+					(int)(12.0 * scale * 2.0));
 			g.drawString("Accuracy: " + String.format("%.2f", (double) (totalShots - misses) / (double) totalShots), 10,
-					12 * fscale * 4);
+					(int)(12.0 * scale * 4.0));
 			g.drawString("Avg. ducks per shot: " + String.format("%.2f", (double) ducksShot / (double) totalShots), 10,
-					12 * fscale * 6);
-			g.drawString("Escaped ducks: " + Integer.toString(escapes), 10, 12 * fscale * 8);
+					(int)(12.0 * scale * 6.0));
+			g.drawString("Escaped ducks: " + Integer.toString(escapes), 10, (int)(12.0 * scale * 8.0));
 			g.drawString(Integer.toString(frames / 60) + "/" + Integer.toString(maxTimer),
-					screenWidth - (12 * fscale * 4), 12 * fscale * 2);
+					screenWidth - (int)(12.0 * scale * 4.0), (int)(12.0 * scale * 2.0));
 			g.drawString(
 					"SCORE: " + String.format("%.2f",
 							((double) ducksShot / (double) totalShots) * ((double) ducksShot - (double) escapes * 5)),
@@ -139,7 +148,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 
 		if (!active) {
-			Font fontBig = new Font("Sans Serif", Font.PLAIN, 52 * fscale);
+			Font fontBig = new Font("Sans Serif", Font.PLAIN, (int)(52.0 * scale));
 			String bigString;
 			if (gamesPlayed == 0) {
 				bigString = "Click to start";
@@ -165,12 +174,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			}
 			gamesPlayed++;
 			active = true;
-			duck1.active = true;
-			duck1.setLocation(0, 0);
-			duck2.active = true;
-			duck2.setLocation(0, 0);
-			duck3.active = true;
-			duck3.setLocation(0, 0);
+			// reset duck position
 			frames = 0;
 			misses = 0;
 			totalShots = 0;
@@ -185,27 +189,15 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			return;
 		}
 		boolean duckHit = false;
-		Rectangle duck1Rect = new Rectangle((int) duck1.x, (int) duck1.y, duck1.width, duck1.height);
-		Rectangle duck2Rect = new Rectangle((int) duck2.x, (int) duck2.y, duck2.width, duck2.height);
-		Rectangle duck3Rect = new Rectangle((int) duck3.x, (int) duck3.y, duck3.width, duck3.height);
+		//Rectangle duck1Rect = new Rectangle((int) duck1.x, (int) duck1.y, duck1.width, duck1.height);
 		// the mouseEvent's x and y are off for some reason, this corrects for that
 		Point mousePoint = new Point(mouse.getX() - 7, mouse.getY() - 30);
 
-		if (duck1Rect.contains(mousePoint)) {
+		/* if (duck1Rect.contains(mousePoint)) {
 			duck1.reset();
 			ducksShot++;
 			duckHit = true;
-		}
-		if (duck2Rect.contains(mousePoint)) {
-			duck2.reset();
-			ducksShot++;
-			duckHit = true;
-		}
-		if (duck3Rect.contains(mousePoint)) {
-			duck3.reset();
-			ducksShot++;
-			duckHit = true;
-		}
+		} */
 		if (!duckHit) {
 			misses++;
 		}

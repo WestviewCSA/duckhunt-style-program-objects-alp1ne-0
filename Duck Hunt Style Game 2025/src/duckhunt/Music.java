@@ -1,3 +1,4 @@
+package duckhunt;
 
 
 import java.io.File;
