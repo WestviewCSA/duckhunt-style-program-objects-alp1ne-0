@@ -6,6 +6,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,13 +22,18 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
-
-	// frame size
-	private int screenWidth = 640 * 2, screenHeight = 480 * 2 + 32;
+	// frame scale
+	private int fscale = 1;
+	private int screenWidth = 640 * fscale;
+	// the +30 is to account for the title bar
+	private int screenHeight = 480 * fscale + 30;
+	// TODO: think of a good title for the game! also figure out what the game's
+	// theme is supposed to be
 	private String title = "Duck Hunt";
 
 	private Image bgImage;
 	private Image fgImage;
+	private Image cloudImage;
 
 	public boolean active = false;
 	public int gamesPlayed = 0;
@@ -36,7 +43,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	int duckCount = 0;
 	int escapes = 0;
 	int frames = 0;
-	int maxTimer = 5;
+	int maxTimer = 30;
 
 	public void incrementEscapeCounter(Integer i) {
 		escapes++;
@@ -45,63 +52,64 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	/**
 	 * Declare and instantiate (create) your objects here
 	 */
-	private Duck duck1 = new Duck(this::incrementEscapeCounter, 0, 0, 1, 1, 30, 0);
-	private Duck duck2 = new Duck(this::incrementEscapeCounter, 0, 0, 1, 1, 30, 0);
-	private Duck duck3 = new Duck(this::incrementEscapeCounter, 0, 0, 1, 1, 30, 0);
+	private Duck duck1 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
+	private Duck duck2 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
+	private Duck duck3 = new Duck(this::incrementEscapeCounter, fscale, screenWidth);
 
 	public void paint(Graphics g) {
 		if (active) {
 			frames++;
 		}
 		super.paintComponent(g);
-		Font font = new Font("Sans Serif", Font.PLAIN, 24);
+		Font font = new Font("Sans Serif", Font.PLAIN, 12 * fscale);
 		g.setFont(font);
 
-		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight - 32, null);
+		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
 		if (frames / 60 == maxTimer) {
 			duck1.active = false;
 			duck2.active = false;
 			duck3.active = false;
 			this.active = false;
-			gamesPlayed++;
 		}
+		g.drawImage(cloudImage, 0, 0, screenWidth, screenHeight, null);
+
 		duck1.paint(g);
 		duck2.paint(g);
 		duck3.paint(g);
 
-		g.drawImage(fgImage, 0, 0, screenWidth, screenHeight - 32, null);
+		g.drawImage(fgImage, 0, 0, screenWidth, screenHeight, null);
 
+		// render stats
 		if (gamesPlayed != 0) {
-			g.drawString(
-					Integer.toString(totalShots) + " shots: " + Integer.toString(misses) + " misses, "
-							+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(duckCount) + " ducks",
-					10, 34);
-			g.drawString("Accuracy: " + String.format("%.2f", (double)(totalShots - misses) / (double) totalShots),
-					10, 34 * 2);
-			g.drawString("Avg. ducks per shot: " + String.format("%.2f", (double) duckCount / (double) totalShots),
-					10, 34 * 3);
-			g.drawString("Escaped ducks: " + Integer.toString(escapes),
-					10, 34 * 4);
+			g.drawString(Integer.toString(totalShots) + " shots: " + Integer.toString(misses) + " misses, "
+					+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(duckCount) + " ducks", 10,
+					12 * fscale * 2);
+			g.drawString("Accuracy: " + String.format("%.2f", (double) (totalShots - misses) / (double) totalShots), 10,
+					12 * fscale * 4);
+			g.drawString("Avg. ducks per shot: " + String.format("%.2f", (double) duckCount / (double) totalShots), 10,
+					12 * fscale * 6);
+			g.drawString("Escaped ducks: " + Integer.toString(escapes), 10, 12 * fscale * 8);
 			g.drawString(Integer.toString(frames / 60) + "/" + Integer.toString(maxTimer),
-					640 * 2 - 80, 34);
+					screenWidth - (12 * fscale * 4), 12 * fscale * 2);
 			g.drawString(
 					"SCORE: " + String.format("%.2f",
 							((double) duckCount / (double) totalShots) * ((double) duckCount - (double) escapes * 5)),
-					10, 480 * 2 - 24);
+					10, screenHeight - 30 - 24);
 		}
-		
-		if (!active) {			
-			Font fontBig = new Font("Sans Serif", Font.PLAIN, 104);
+
+		if (!active) {
+			Font fontBig = new Font("Sans Serif", Font.PLAIN, 52 * fscale);
 			String bigString;
 			if (gamesPlayed == 0) {
 				bigString = "Click to start";
 			} else {
-				bigString = String.format("%.2f", ((double) duckCount / (double) totalShots) * ((double) duckCount - (double) escapes * 5));
+				bigString = String.format("%.2f",
+						((double) duckCount / (double) totalShots) * ((double) duckCount - (double) escapes * 5));
 			}
 			g.setFont(fontBig);
 			FontMetrics metrics = g.getFontMetrics(fontBig);
-			int x = (640 * 2 - metrics.stringWidth(bigString)) / 2;
-			int y = ((480 * 2 - metrics.getHeight()) / 2) + metrics.getAscent();
+			int x = (screenWidth - metrics.stringWidth(bigString)) / 2;
+			int y = ((screenHeight - 30 - metrics.getHeight()) / 2) + metrics.getAscent();
 			g.drawString(bigString, x, y);
 		}
 	}
@@ -111,7 +119,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		// play another round of the game on click
 		if (!active) {
 			if (gamesPlayed != 0) {
-				System.out.println(String.format("%.2f", ((double) duckCount / (double) totalShots) * ((double) duckCount - (double) escapes * 5)));
+				System.out.println(String.format("%.2f",
+						((double) duckCount / (double) totalShots) * ((double) duckCount - (double) escapes * 5)));
 			}
 			gamesPlayed++;
 			active = true;
@@ -142,23 +151,27 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (!active) {
 			return;
 		}
-		int mx = mouse.getX();
-		int my = mouse.getY();
 		boolean duckHit = false;
-		if (mx > duck1.x && mx <= duck1.x + duck1.width && my > duck1.y && my <= duck1.y + duck1.height) {
+		Rectangle duck1Rect = new Rectangle((int) duck1.x, (int) duck1.y, duck1.width, duck1.height);
+		Rectangle duck2Rect = new Rectangle((int) duck2.x, (int) duck2.y, duck2.width, duck2.height);
+		Rectangle duck3Rect = new Rectangle((int) duck3.x, (int) duck3.y, duck3.width, duck3.height);
+		// the mouseEvent's x and y are off for some reason, this corrects for that
+		Point mousePoint = new Point(mouse.getX() - 7, mouse.getY() - 30);
+
+		if (duck1Rect.contains(mousePoint)) {
 			duck1.reset();
-			duckHit = true;
 			duckCount++;
+			duckHit = true;
 		}
-		if (mx > duck2.x && mx <= duck2.x + duck2.width && my > duck2.y && my <= duck2.y + duck2.height) {
+		if (duck2Rect.contains(mousePoint)) {
 			duck2.reset();
-			duckHit = true;
 			duckCount++;
+			duckHit = true;
 		}
-		if (mx > duck3.x && mx <= duck3.x + duck3.width && my > duck3.y && my <= duck3.y + duck3.height) {
+		if (duck3Rect.contains(mousePoint)) {
 			duck3.reset();
-			duckHit = true;
 			duckCount++;
+			duckHit = true;
 		}
 		if (!duckHit) {
 			misses++;
@@ -200,7 +213,6 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	 */
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
 		repaint();
 	}
 
@@ -237,6 +249,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.setVisible(true);
 		this.bgImage = getImage("imgs/bg.png");
 		this.fgImage = getImage("imgs/fg.png");
+		this.cloudImage = getImage("imgs/cloud.png");
 	}
 
 }

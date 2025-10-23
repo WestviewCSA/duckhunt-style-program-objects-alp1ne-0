@@ -33,10 +33,8 @@ public class Music  implements Runnable  {
 	        audioClip.open(audioStream);
 	        //audioClip.start();
 		} catch (UnsupportedAudioFileException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -63,10 +61,8 @@ public class Music  implements Runnable  {
 	        audioClip.open(audioStream);
 	        audioClip.start();
 		} catch (UnsupportedAudioFileException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
