@@ -24,8 +24,8 @@ import java.net.URL;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
 	private double scale = 2.0;
-	private int screenWidth = (int)(640.0 * scale);
-	private int screenHeight = (int)(480.0 * scale) + 30; // +30 is to account for title bar
+	private int screenWidth = (int) (640.0 * scale);
+	private int screenHeight = (int) (480.0 * scale) + 30; // +30 is to account for title bar
 	private String title = "Obelisk Defense";
 
 	private Image bgImage;
@@ -38,11 +38,12 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 	// controls if a round is currently going, i.e. not on score display screen
 	public boolean active = false;
-	// controls if the game has been started, i.e. the Frame() initializer has completed
+	// controls if the game has been started, i.e. the Frame() initializer has
+	// completed
 	public boolean gameStarted = false;
 	public int roundsPlayed = 0;
 
-	// frame counter, used to know when to end the current round
+	// frame counter, used to know when to end the current round:w
 	int frames = 0;
 
 	int misses = 0;
@@ -50,6 +51,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	int ducksShot = 0;
 	int escapes = 0;
 	int maxTimer = 15;
+
+	// only exists so Eclipse will stop yelling at me, this class will not actually ever be serialized
+	private static final long serialVersionUID = 1L;
 
 	public static Image getImage(String path) {
 		Image tempImage = null;
@@ -94,7 +98,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		this.fgImage = getImage("../imgs/fg.png");
 		this.cloudImage = getImage("../imgs/clouds.png");
 
-		// sends an event every 16 milliseconds to repaint the screen, approximately 60fps
+		// sends an event every 16 milliseconds to repaint the screen, approximately
+		// 60fps
 		Timer t = new Timer(16, this);
 		t.start();
 		this.gameStarted = true;
@@ -107,7 +112,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 	public void update() {
-		if (!gameStarted) { return; }
+		if (!gameStarted) {
+			return;
+		}
 		if (active) {
 			frames++;
 		}
@@ -120,7 +127,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 	public void paint(Graphics g) {
-		if (!gameStarted) { return; }
+		if (!gameStarted) {
+			return;
+		}
 		super.paintComponent(g);
 
 		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
@@ -132,20 +141,20 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 		g.drawImage(fgImage, 0, 0, screenWidth, screenHeight, null);
 
-		Font font = new Font("Sans Serif", Font.PLAIN, (int)(12.0 * scale));
+		Font font = new Font("Sans Serif", Font.PLAIN, (int) (12.0 * scale));
 		g.setFont(font);
 		// render stats
 		if (roundsPlayed != 0) {
 			g.drawString(Integer.toString(totalShots) + " shots: " + Integer.toString(misses) + " misses, "
 					+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(ducksShot) + " obelisks", 10,
-					(int)(12.0 * scale * 2.0));
+					(int) (12.0 * scale * 2.0));
 			g.drawString("Accuracy: " + String.format("%.2f", (double) (totalShots - misses) / (double) totalShots), 10,
-					(int)(12.0 * scale * 4.0));
+					(int) (12.0 * scale * 4.0));
 			g.drawString("Avg. ducks per shot: " + String.format("%.2f", (double) ducksShot / (double) totalShots), 10,
-					(int)(12.0 * scale * 6.0));
-			g.drawString("Escaped obelisks: " + Integer.toString(escapes), 10, (int)(12.0 * scale * 8.0));
+					(int) (12.0 * scale * 6.0));
+			g.drawString("Escaped obelisks: " + Integer.toString(escapes), 10, (int) (12.0 * scale * 8.0));
 			g.drawString(Integer.toString(frames / 60) + "/" + Integer.toString(maxTimer),
-					screenWidth - (int)(12.0 * scale * 4.0), (int)(12.0 * scale * 2.0));
+					screenWidth - (int) (12.0 * scale * 4.0), (int) (12.0 * scale * 2.0));
 			g.drawString(
 					"SCORE: " + String.format("%.2f",
 							((double) ducksShot / (double) totalShots) * ((double) ducksShot - (double) escapes * 5)),
@@ -153,7 +162,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		}
 
 		if (!active) {
-			Font fontBig = new Font("Sans Serif", Font.PLAIN, (int)(52.0 * scale));
+			Font fontBig = new Font("Sans Serif", Font.PLAIN, (int) (52.0 * scale));
 			String bigString;
 			if (roundsPlayed == 0) {
 				bigString = "Click to start";
@@ -208,7 +217,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			if (duckRect.contains(mousePoint) && !duck.isFalling) {
 				duck.onShoot();
 				ducksShot++;
-				duckHit = true;				
+				duckHit = true;
 			}
 		}
 		if (!duckHit) {

@@ -1,4 +1,5 @@
 package duckhunt;
+
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -36,8 +37,8 @@ public class Duck {
 
 	public Duck(Image img, Consumer<Integer> escapeCallback, double scale, int screenWidth, int screenHeight) {
 		this.img = img;
-		this.width = (int)(150.0 * scale);
-		this.height = (int)(44.0 * scale);
+		this.width = (int) (150.0 * scale);
+		this.height = (int) (44.0 * scale);
 		this.scale = scale;
 
 		this.x = 0;
@@ -46,7 +47,7 @@ public class Duck {
 		this.transform = AffineTransform.getTranslateInstance(x, y);
 		this.transform.scale(scale, scale);
 
-		this.vx = (int)(15.0 * scale);
+		this.vx = (int) (15.0 * scale);
 		this.vy = 0;
 
 		this.ax = 0;
@@ -60,15 +61,15 @@ public class Duck {
 
 	// called when the duck is shot
 	public void onShoot() {
-		this.ay = 5 + (int)(Math.random() * 2.0 - 1.0);
+		this.ay = 5 + (int) (Math.random() * 2.0 - 1.0);
 		this.isFalling = true;
 	}
 
 	public void resetPosition() {
 		this.x = -width;
-		this.y = (int)(Math.random() * (320 * scale - height));
+		this.y = (int) (Math.random() * (320 * scale - height));
 
-		this.vx = (int)(15.0 * scale);
+		this.vx = (int) (15.0 * scale);
 		this.vy = 0;
 
 		this.ax = 0;
