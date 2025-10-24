@@ -13,10 +13,17 @@ public class Duck {
 	public int height;
 	public double scale;
 
+	public int startingHp = 3;
+	public int hp = 3;
+
+	public int jitter = 0;
+
 	public int x;
 	public int y;
 
 	public AffineTransform transform;
+
+	public int startingVx;
 
 	// velocity x and y
 	public int vx;
@@ -47,7 +54,9 @@ public class Duck {
 		this.transform = AffineTransform.getTranslateInstance(x, y);
 		this.transform.scale(scale, scale);
 
-		this.vx = (int) (15.0 * scale);
+		this.startingVx = (int) (15.0 * scale);
+
+		this.vx = this.startingVx;
 		this.vy = 0;
 
 		this.ax = 0;
@@ -59,9 +68,8 @@ public class Duck {
 		this.escapeCallback = escapeCallback;
 	}
 
-	// called when the duck is shot
-	public void onShoot() {
-		this.ay = 5 + (int) (Math.random() * 2.0 - 1.0);
+	public void onDeath() {
+		this.ay = (int)(3.0 * scale);
 		this.isFalling = true;
 	}
 
@@ -69,13 +77,15 @@ public class Duck {
 		this.x = -width;
 		this.y = (int) (Math.random() * (320 * scale - height));
 
-		this.vx = (int) (15.0 * scale);
+		this.vx = startingVx;
 		this.vy = 0;
 
 		this.ax = 0;
 		this.ay = 0;
 
 		this.isFalling = false;
+		this.hp = startingHp;
+		this.jitter = 0;
 	}
 
 	// update any variables for the object such as x, y, vx, vy
@@ -86,7 +96,10 @@ public class Duck {
 		this.vy += ay;
 		if (x >= screenWidth && !isFalling) {
 			resetPosition();
-			this.escapeCallback.accept(1);
+			this.escapeCallback.accept(startingHp);
+		}
+		if (hp <= 0 && !isFalling) {
+			onDeath();
 		}
 		if (y >= screenHeight) {
 			resetPosition();
@@ -97,6 +110,10 @@ public class Duck {
 	public void paint(Graphics g) {
 		Graphics2D g2 = (Graphics2D) g; // Graphics2D lets us draw images
 		this.transform.setToTranslation(this.x, this.y);
+		if (jitter > 0) {
+			jitter--;
+			this.transform.translate((Math.random() * 4.0 - 2.0) * (jitter / 10), (Math.random() * 4.0 - 2.0) * (jitter / 10));
+		}
 		this.transform.scale(this.scale, this.scale);
 		g2.drawImage(this.img, transform, null); // Actually draw the duck image
 	}

@@ -6,6 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
@@ -28,6 +29,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int screenHeight = (int) (480.0 * scale) + 30; // +30 is to account for title bar
 	private String title = "Obelisk Defense";
 
+	private boolean mousePressed = false;
+
 	private Image bgImage;
 	private Image fgImage;
 	private Image cloudImage;
@@ -35,6 +38,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	// we call them ducks but they are actually evil alien obelisks
 	public int duckCount = 5;
 	public Duck ducks[] = new Duck[duckCount];
+	public Duck theBigDuck;
 
 	// controls if a round is currently going, i.e. not on score display screen
 	public boolean active = false;
@@ -43,14 +47,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	public boolean gameStarted = false;
 	public int roundsPlayed = 0;
 
-	// frame counter, used to know when to end the current round:w
+	// frame counter, used to know when to end the current round
 	int frames = 0;
 
 	int misses = 0;
 	int totalShots = 0;
 	int ducksShot = 0;
 	int escapes = 0;
-	int maxTimer = 15;
+	int maxTimer = 30;
 
 	// only exists so Eclipse will stop yelling at me, this class will not actually ever be serialized
 	private static final long serialVersionUID = 1L;
@@ -70,6 +74,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	public void duckEscapeCallback(Integer i) {
 		if (active) {
 			escapes++;
+			if (i > 3) {
+				escapes += 100;
+			}
 		}
 	}
 
@@ -91,9 +98,18 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.setVisible(true);
 
 		Image duckImage = getImage("../imgs/obelisk.png");
+		Image theBigDuckImage = getImage("../imgs/bigObelisk.png");
 		for (int i = 0; i < duckCount; i++) {
 			ducks[i] = new Duck(duckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
 		}
+
+		theBigDuck = new Duck(theBigDuckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
+		theBigDuck.startingVx = (int)(1.0 * scale);
+		theBigDuck.startingHp = 200;
+		theBigDuck.width = (int)(450.0 * scale);
+		theBigDuck.height = (int)(132.0 * scale);
+		theBigDuck.resetPosition();
+
 		this.bgImage = getImage("../imgs/bg.png");
 		this.fgImage = getImage("../imgs/fg.png");
 		this.cloudImage = getImage("../imgs/clouds.png");
@@ -118,12 +134,16 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (active) {
 			frames++;
 		}
+		if (mousePressed && active) {
+			shoot();
+		}
 		if (frames / 60 == maxTimer) {
 			this.active = false;
 		}
 		for (Duck duck : ducks) {
 			duck.update();
 		}
+		theBigDuck.update();
 	}
 
 	public void paint(Graphics g) {
@@ -133,6 +153,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		super.paintComponent(g);
 
 		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
+
+		theBigDuck.paint(g);
+
 		g.drawImage(cloudImage, 0, 0, screenWidth, screenHeight, null);
 
 		for (Duck duck : ducks) {
@@ -146,11 +169,11 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		// render stats
 		if (roundsPlayed != 0) {
 			g.drawString(Integer.toString(totalShots) + " shots: " + Integer.toString(misses) + " misses, "
-					+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(ducksShot) + " obelisks", 10,
+					+ Integer.toString(totalShots - misses) + " hits; " + Integer.toString(ducksShot) + " damage dealt", 10,
 					(int) (12.0 * scale * 2.0));
 			g.drawString("Accuracy: " + String.format("%.2f", (double) (totalShots - misses) / (double) totalShots), 10,
 					(int) (12.0 * scale * 4.0));
-			g.drawString("Avg. ducks per shot: " + String.format("%.2f", (double) ducksShot / (double) totalShots), 10,
+			g.drawString("Avg. damage per shot: " + String.format("%.2f", (double) ducksShot / (double) totalShots), 10,
 					(int) (12.0 * scale * 6.0));
 			g.drawString("Escaped obelisks: " + Integer.toString(escapes), 10, (int) (12.0 * scale * 8.0));
 			g.drawString(Integer.toString(frames / 60) + "/" + Integer.toString(maxTimer),
@@ -192,9 +215,38 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 		for (Duck duck : ducks) {
 			duck.resetPosition();
+			duck.y = 0;
 		}
+		theBigDuck.resetPosition();
 
 		active = true;
+	}
+
+	public void shoot() {
+		boolean duckHit = false;
+		// the mouseEvent's x and y are off for some reason, this corrects for that
+		Point mousePoint = new Point(MouseInfo.getPointerInfo().getLocation().x - 7, MouseInfo.getPointerInfo().getLocation().y - 30);
+		Rectangle mouseZone = new Rectangle(mousePoint.x - 5, mousePoint.y - 5, 10, 10);
+		for (Duck duck : ducks) {
+			Rectangle duckRect = new Rectangle(duck.x, duck.y, duck.width, duck.height);
+			if (duckRect.intersects(mouseZone) && !duck.isFalling) {
+				duck.hp--;
+				duck.jitter += 5;
+				ducksShot++;
+				duckHit = true;
+			}
+		}
+		Rectangle theBigDuckRect = new Rectangle(theBigDuck.x, theBigDuck.y, theBigDuck.width, theBigDuck.height);
+		if (theBigDuckRect.intersects(mouseZone) && !theBigDuck.isFalling) {
+			theBigDuck.hp--;
+			theBigDuck.jitter += 2;
+			ducksShot++;
+			duckHit = true;
+		}
+		if (!duckHit) {
+			misses++;
+		}
+		totalShots++;
 	}
 
 	@Override
@@ -209,24 +261,12 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (!active) {
 			return;
 		}
-		boolean duckHit = false;
-		// the mouseEvent's x and y are off for some reason, this corrects for that
-		Point mousePoint = new Point(mouse.getX() - 7, mouse.getY() - 30);
-		for (Duck duck : ducks) {
-			Rectangle duckRect = new Rectangle(duck.x, duck.y, duck.width, duck.height);
-			if (duckRect.contains(mousePoint) && !duck.isFalling) {
-				duck.onShoot();
-				ducksShot++;
-				duckHit = true;
-			}
-		}
-		if (!duckHit) {
-			misses++;
-		}
-		totalShots++;
+		mousePressed = true;
 	}
 
-	public void mouseReleased(MouseEvent mouse) {}
+	public void mouseReleased(MouseEvent mouse) {
+		mousePressed = false;		
+	}
 	public void mouseEntered(MouseEvent mouse) {}
 	public void mouseExited(MouseEvent mouse) {}
 
