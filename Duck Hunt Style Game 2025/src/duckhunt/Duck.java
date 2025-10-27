@@ -13,8 +13,8 @@ public class Duck {
 	public int height;
 	public double scale;
 
-	public int startingHp = 3;
-	public int hp = 3;
+	public int startingHp = 1;
+	public int hp = 1;
 
 	public int jitter = 0;
 
@@ -112,7 +112,7 @@ public class Duck {
 		this.transform.setToTranslation(this.x, this.y);
 		if (jitter > 0) {
 			jitter--;
-			this.transform.translate((Math.random() * 4.0 - 2.0) * (jitter / 10), (Math.random() * 4.0 - 2.0) * (jitter / 10));
+			this.transform.translate((Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale, (Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale);
 		}
 		this.transform.scale(this.scale, this.scale);
 		g2.drawImage(this.img, transform, null); // Actually draw the duck image

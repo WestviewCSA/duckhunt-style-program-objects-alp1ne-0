@@ -22,6 +22,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import java.net.URL;
+import java.util.ArrayList;
 
 public class Frame extends JPanel implements ActionListener, MouseListener, KeyListener {
 	private double scale = 2.0;
@@ -36,8 +37,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private Image cloudImage;
 
 	// we call them ducks but they are actually evil alien obelisks
-	public int duckCount = 5;
-	public Duck ducks[] = new Duck[duckCount];
+	public ArrayList<Duck> ducks = new ArrayList<Duck>();
 	public Duck theBigDuck;
 
 	// controls if a round is currently going, i.e. not on score display screen
@@ -54,7 +54,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	int totalShots = 0;
 	int ducksShot = 0;
 	int escapes = 0;
-	int maxTimer = 30;
+	int maxEscapes = 5;
 
 	// only exists so Eclipse will stop yelling at me, this class will not actually ever be serialized
 	private static final long serialVersionUID = 1L;
@@ -73,10 +73,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	// used as a callback for the ducks
 	public void duckEscapeCallback(Integer i) {
 		if (active) {
-			escapes++;
-			if (i > 3) {
-				escapes += 100;
-			}
+			escapes += i;
 		}
 	}
 
@@ -97,15 +94,15 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
 
-		Image duckImage = getImage("../imgs/obelisk.png");
+		this.addDuck();
+		this.addDuck();
+		this.addDuck();
+
 		Image theBigDuckImage = getImage("../imgs/bigObelisk.png");
-		for (int i = 0; i < duckCount; i++) {
-			ducks[i] = new Duck(duckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
-		}
 
 		theBigDuck = new Duck(theBigDuckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
 		theBigDuck.startingVx = (int)(1.0 * scale);
-		theBigDuck.startingHp = 200;
+		theBigDuck.startingHp = 300;
 		theBigDuck.width = (int)(450.0 * scale);
 		theBigDuck.height = (int)(132.0 * scale);
 		theBigDuck.resetPosition();
@@ -134,16 +131,30 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (active) {
 			frames++;
 		}
+		if (frames % 300 == 0 && active) {
+			addDuck();
+		}
 		if (mousePressed && active) {
 			shoot();
 		}
-		if (frames / 60 == maxTimer) {
+		if (escapes >= maxEscapes) {
 			this.active = false;
 		}
 		for (Duck duck : ducks) {
 			duck.update();
 		}
 		theBigDuck.update();
+	}
+
+	public void addDuck() {
+		Image duckImage = getImage("../imgs/obelisk.png");
+		Duck newDuck = new Duck(duckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
+		newDuck.resetPosition();
+		ducks.add(newDuck);
+	}
+
+	public double calculateScore() {
+		return ((Math.pow((double) ducksShot, 2.0) / (double) totalShots));
 	}
 
 	public void paint(Graphics g) {
@@ -175,12 +186,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 					(int) (12.0 * scale * 4.0));
 			g.drawString("Avg. damage per shot: " + String.format("%.2f", (double) ducksShot / (double) totalShots), 10,
 					(int) (12.0 * scale * 6.0));
-			g.drawString("Escaped obelisks: " + Integer.toString(escapes), 10, (int) (12.0 * scale * 8.0));
-			g.drawString(Integer.toString(frames / 60) + "/" + Integer.toString(maxTimer),
-					screenWidth - (int) (12.0 * scale * 4.0), (int) (12.0 * scale * 2.0));
+			g.drawString("Escaped obelisks: " + Integer.toString(escapes) + "/" + Integer.toString(maxEscapes), 10, (int) (12.0 * scale * 8.0));
+			g.drawString(Integer.toString(frames / 60), screenWidth - (int) (12.0 * scale * 4.0), (int) (12.0 * scale * 2.0));
 			g.drawString(
-					"SCORE: " + String.format("%.2f",
-							((double) ducksShot / (double) totalShots) * ((double) ducksShot - (double) escapes * 5)),
+					"SCORE: " + String.format("%.2f", calculateScore()),
 					10, screenHeight - 30 - 24);
 		}
 
@@ -190,8 +199,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 			if (roundsPlayed == 0) {
 				bigString = "Click to start";
 			} else {
-				bigString = String.format("%.2f",
-						((double) ducksShot / (double) totalShots) * ((double) ducksShot - (double) escapes * 5));
+				bigString = String.format("%.2f", calculateScore());
 			}
 			g.setFont(fontBig);
 			FontMetrics metrics = g.getFontMetrics(fontBig);
@@ -203,8 +211,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 	public void startNewRound() {
 		if (roundsPlayed != 0) {
-			System.out.println(String.format("%.2f",
-					((double) ducksShot / (double) totalShots) * ((double) ducksShot - (double) escapes * 5)));
+			System.out.println(String.format("%.2f", calculateScore()));
 		}
 		roundsPlayed++;
 		frames = 0;
@@ -213,10 +220,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		escapes = 0;
 		ducksShot = 0;
 
-		for (Duck duck : ducks) {
-			duck.resetPosition();
-			duck.y = 0;
-		}
+		ducks.removeAll(ducks);
+		this.addDuck();
+		this.addDuck();
+		this.addDuck();
 		theBigDuck.resetPosition();
 
 		active = true;
