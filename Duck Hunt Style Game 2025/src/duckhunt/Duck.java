@@ -34,6 +34,7 @@ public class Duck {
 	public int ay;
 
 	public boolean isFalling = false;
+	public boolean removeable = false;
 
 	// used to tell if the duck has left the screen
 	public int screenWidth;
@@ -101,8 +102,12 @@ public class Duck {
 		if (hp <= 0 && !isFalling) {
 			onDeath();
 		}
-		if (y >= screenHeight) {
+		if (removeable) {			
+			removeable = false;
 			resetPosition();
+		}
+		if (y >= screenHeight) {
+			removeable = true;
 		}
 	}
 

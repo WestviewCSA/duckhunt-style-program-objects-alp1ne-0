@@ -30,7 +30,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	private int screenHeight = (int) (480.0 * scale) + 30; // +30 is to account for title bar
 	private String title = "Obelisk Defense";
 
-	private boolean mousePressed = false;
+	private boolean mouseHeld = false;
 
 	private Image bgImage;
 	private Image fgImage;
@@ -38,14 +38,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 	// we call them ducks but they are actually evil alien obelisks
 	public ArrayList<Duck> ducks = new ArrayList<Duck>();
-	public Duck theBigDuck;
+	public ArrayList<Duck> bigDucks = new ArrayList<Duck>();
 
 	// controls if a round is currently going, i.e. not on score display screen
 	public boolean active = false;
 	// controls if the game has been started, i.e. the Frame() initializer has
 	// completed
 	public boolean gameStarted = false;
-	public int roundsPlayed = 0;
+	public int roundsPlayed = -1;
 
 	// frame counter, used to know when to end the current round
 	int frames = 0;
@@ -73,7 +73,11 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	// used as a callback for the ducks
 	public void duckEscapeCallback(Integer i) {
 		if (active) {
-			escapes += i;
+			if (i > 1) {
+				escapes = 2147483647;
+			} else {
+				escapes += i;
+			}
 		}
 	}
 
@@ -94,18 +98,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
 
-		this.addDuck();
-		this.addDuck();
-		this.addDuck();
-
-		Image theBigDuckImage = getImage("../imgs/bigObelisk.png");
-
-		theBigDuck = new Duck(theBigDuckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
-		theBigDuck.startingVx = (int)(1.0 * scale);
-		theBigDuck.startingHp = 300;
-		theBigDuck.width = (int)(450.0 * scale);
-		theBigDuck.height = (int)(132.0 * scale);
-		theBigDuck.resetPosition();
+		this.startNewRound();
+		this.active = false;
 
 		this.bgImage = getImage("../imgs/bg.png");
 		this.fgImage = getImage("../imgs/fg.png");
@@ -120,8 +114,8 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 	// repaint when the timer goes off
 	public void actionPerformed(ActionEvent arg0) {
-		update();
 		repaint();
+		update();
 	}
 
 	public void update() {
@@ -134,7 +128,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (frames % 300 == 0 && active) {
 			addDuck();
 		}
-		if (mousePressed && active) {
+		if (frames % 900 == 0 && active) {
+			addBigDuck();
+		}
+		if (mouseHeld && active) {
 			shoot();
 		}
 		if (escapes >= maxEscapes) {
@@ -143,7 +140,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		for (Duck duck : ducks) {
 			duck.update();
 		}
-		theBigDuck.update();
+		for (Duck bigDuck : bigDucks) {
+			bigDuck.update();
+		}
+		bigDucks.removeIf(bigDuck -> bigDuck.removeable);
 	}
 
 	public void addDuck() {
@@ -151,6 +151,17 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		Duck newDuck = new Duck(duckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
 		newDuck.resetPosition();
 		ducks.add(newDuck);
+	}
+
+	public void addBigDuck() {		
+		Image theBigDuckImage = getImage("../imgs/bigObelisk.png");
+		Duck theBigDuck = new Duck(theBigDuckImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
+		theBigDuck.startingVx = (int)(1.0 * scale);
+		theBigDuck.startingHp = 200;
+		theBigDuck.width = (int)(450.0 * scale);
+		theBigDuck.height = (int)(132.0 * scale);
+		theBigDuck.resetPosition();
+		bigDucks.add(theBigDuck);
 	}
 
 	public double calculateScore() {
@@ -165,7 +176,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 
 		g.drawImage(bgImage, 0, 0, screenWidth, screenHeight, null);
 
-		theBigDuck.paint(g);
+		for (Duck bigDuck : bigDucks) {
+			bigDuck.paint(g);
+		}
 
 		g.drawImage(cloudImage, 0, 0, screenWidth, screenHeight, null);
 
@@ -210,8 +223,9 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 	public void startNewRound() {
-		if (roundsPlayed != 0) {
-			System.out.println(String.format("%.2f", calculateScore()));
+		if (roundsPlayed > 0) {
+			System.out.print(String.format("%.2f ", calculateScore()));
+			System.out.println(frames / 60);
 		}
 		roundsPlayed++;
 		frames = 0;
@@ -224,7 +238,7 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		this.addDuck();
 		this.addDuck();
 		this.addDuck();
-		theBigDuck.resetPosition();
+		bigDucks.removeAll(bigDucks);
 
 		active = true;
 	}
@@ -243,12 +257,14 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 				duckHit = true;
 			}
 		}
-		Rectangle theBigDuckRect = new Rectangle(theBigDuck.x, theBigDuck.y, theBigDuck.width, theBigDuck.height);
-		if (theBigDuckRect.intersects(mouseZone) && !theBigDuck.isFalling) {
-			theBigDuck.hp--;
-			theBigDuck.jitter += 2;
-			ducksShot++;
-			duckHit = true;
+		for (Duck bigDuck : bigDucks) {
+			Rectangle bigDuckRect = new Rectangle(bigDuck.x, bigDuck.y, bigDuck.width, bigDuck.height);
+			if (bigDuckRect.intersects(mouseZone) && !bigDuck.isFalling) {
+				bigDuck.hp--;
+				bigDuck.jitter += 2;
+				ducksShot++;
+				duckHit = true;
+			}
 		}
 		if (!duckHit) {
 			misses++;
@@ -257,23 +273,17 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent mouse) {
+	public void mousePressed(MouseEvent mouse) {
 		if (!active) {
 			startNewRound();
 		}
-	}
-
-	@Override
-	public void mousePressed(MouseEvent mouse) {
-		if (!active) {
-			return;
-		}
-		mousePressed = true;
+		mouseHeld = true;
 	}
 
 	public void mouseReleased(MouseEvent mouse) {
-		mousePressed = false;		
+		mouseHeld = false;		
 	}
+	public void mouseClicked(MouseEvent mouse) {}
 	public void mouseEntered(MouseEvent mouse) {}
 	public void mouseExited(MouseEvent mouse) {}
 
