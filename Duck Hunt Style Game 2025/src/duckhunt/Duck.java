@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 public class Duck {
 	// image and bounding box dimensions
 	public Image img;
+	public Image fireImg;
 	public int width;
 	public int height;
 	public double scale;
@@ -34,6 +35,8 @@ public class Duck {
 	public int ay;
 
 	public boolean isFalling = false;
+	public int flaming = 0;
+	public int maxFlaming = 60;
 	public boolean removeable = false;
 
 	// used to tell if the duck has left the screen
@@ -43,8 +46,9 @@ public class Duck {
 	// called whenever a duck escapes to the right of the screen
 	Consumer<Integer> escapeCallback;
 
-	public Duck(Image img, Consumer<Integer> escapeCallback, double scale, int screenWidth, int screenHeight) {
+	public Duck(Image img, Image fireImg, Consumer<Integer> escapeCallback, double scale, int screenWidth, int screenHeight) {
 		this.img = img;
+		this.fireImg = fireImg;
 		this.width = (int) (150.0 * scale);
 		this.height = (int) (44.0 * scale);
 		this.scale = scale;
@@ -91,10 +95,10 @@ public class Duck {
 
 	// update any variables for the object such as x, y, vx, vy
 	public void update() {
-		this.x += vx;
-		this.y += vy;
 		this.vx += ax;
 		this.vy += ay;
+		this.x += vx;
+		this.y += vy;
 		if (x >= screenWidth && !isFalling) {
 			resetPosition();
 			this.escapeCallback.accept(startingHp);
@@ -102,12 +106,18 @@ public class Duck {
 		if (hp <= 0 && !isFalling) {
 			onDeath();
 		}
-		if (removeable) {			
-			removeable = false;
-			resetPosition();
+		if (y >= 320 * scale - height && flaming == 0) {
+			ay = 0;
+			vy = 0;
+			vx = 0;
+			flaming = maxFlaming;
 		}
-		if (y >= screenHeight) {
-			removeable = true;
+		if (flaming > 1) {
+			flaming--;
+		}
+		if (flaming == 1) {
+			resetPosition();
+			flaming = 0;
 		}
 	}
 
@@ -120,6 +130,14 @@ public class Duck {
 			this.transform.translate((Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale, (Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale);
 		}
 		this.transform.scale(this.scale, this.scale);
-		g2.drawImage(this.img, transform, null); // Actually draw the duck image
+		if (flaming > 1) {
+			this.transform.translate(0, 44 * scale);
+			this.transform.scale(1, (double)flaming / maxFlaming);
+			this.transform.translate(0, -44 * scale - 15 * scale);
+			this.transform.scale(width / (150 * scale), height / (44 * scale));
+			g2.drawImage(this.fireImg, transform, null);			
+		} else {		
+			g2.drawImage(this.img, transform, null); // Actually draw the duck image
+		}
 	}
 }

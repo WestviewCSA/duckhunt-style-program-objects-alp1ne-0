@@ -6,6 +6,7 @@ To destroy obelisks, click and hold with your mouse cursor.
 This will fire a stream of bullets from your shooting device.
 Every 5 seconds, a new obelisk (see fig. 1) will spawn in.
 If more than 5 obelisks escape to the right, then the Rightward City is destroyed, and you lose.
+
 Additionally, there is The Big One (see fig. 2), which can take much more damage before being destroyed.
 If it escapes, then the Rightward City and the rest of the earth is destroyed, and you lose.
 A new Big One spawns every 15 seconds.
