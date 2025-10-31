@@ -125,10 +125,10 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		if (active) {
 			frames++;
 		}
-		if (frames % 300 == 0 && active) {
+		if (frames % 180 == 0 && active) {
 			addDuck();
 		}
-		if (frames % 300 == 0 && active) {
+		if (frames % 900 == 0 && active) {
 			addBigDuck();
 		}
 		if (mouseHeld && active) {
@@ -159,11 +159,11 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		Image fireImage = getImage("../imgs/fire.gif");
 		Duck theBigDuck = new Duck(theBigDuckImage, fireImage, this::duckEscapeCallback, scale, screenWidth, screenHeight);
 		theBigDuck.startingVx = (int)(1.0 * scale);
-		theBigDuck.startingHp = 200;
+		theBigDuck.startingHp = 300;
 		theBigDuck.width = (int)(450.0 * scale);
 		theBigDuck.height = (int)(132.0 * scale);
 		theBigDuck.resetPosition();
-		theBigDuck.maxFlaming = 300;
+		theBigDuck.maxFlaming = 360;
 		bigDucks.add(theBigDuck);
 	}
 
@@ -237,13 +237,15 @@ public class Frame extends JPanel implements ActionListener, MouseListener, KeyL
 		escapes = 0;
 		ducksShot = 0;
 
+		active = true;
+
 		ducks.removeAll(ducks);
 		this.addDuck();
 		this.addDuck();
 		this.addDuck();
+		this.addDuck();
+		this.addDuck();
 		bigDucks.removeAll(bigDucks);
-
-		active = true;
 	}
 
 	public void shoot() {

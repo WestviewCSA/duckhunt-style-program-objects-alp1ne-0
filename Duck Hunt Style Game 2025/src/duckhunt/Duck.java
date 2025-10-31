@@ -36,7 +36,7 @@ public class Duck {
 
 	public boolean isFalling = false;
 	public int flaming = 0;
-	public int maxFlaming = 60;
+	public int maxFlaming = 90;
 	public boolean removeable = false;
 
 	// used to tell if the duck has left the screen
@@ -115,9 +115,13 @@ public class Duck {
 		if (flaming > 1) {
 			flaming--;
 		}
-		if (flaming == 1) {
+		if (removeable) {			
+			removeable = false;
 			resetPosition();
 			flaming = 0;
+		}
+		if (flaming == 1) {
+			removeable = true;
 		}
 	}
 
@@ -130,10 +134,10 @@ public class Duck {
 			this.transform.translate((Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale, (Math.random() * 2.0 - 1.0) * (jitter / 10) * this.scale);
 		}
 		this.transform.scale(this.scale, this.scale);
-		if (flaming > 1) {
-			this.transform.translate(0, 44 * scale);
+		if (flaming > 1 || removeable) {
+			this.transform.translate(0, height);
 			this.transform.scale(1, (double)flaming / maxFlaming);
-			this.transform.translate(0, -44 * scale - 15 * scale);
+			this.transform.translate(0, -height - height / 3);
 			this.transform.scale(width / (150 * scale), height / (44 * scale));
 			g2.drawImage(this.fireImg, transform, null);			
 		} else {		
